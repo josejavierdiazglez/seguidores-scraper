@@ -1,12 +1,14 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 'use strict';
 
 /**
  * Minifica el extractor (extraer) con Terser y embebe otros/comparar-minified.js (comparar) en GitHub Pages.
  *
- *   pnpm run build
- *   node scripts/build.js otros/otro-archivo.js
+ *   bun run build
+ *   bun scripts/build.js otros/otro-archivo.js
  */
+
+require('./enforce-bun');
 
 const fs = require('fs');
 const path = require('path');
@@ -18,7 +20,6 @@ const compararSource = path.join(root, 'otros', 'comparar-minified.js');
 const cachePath = path.join(root, 'dist', 'dist.js');
 const extraerIndexPath = path.join(root, 'public', 'extraer', 'index.html');
 const compararIndexPath = path.join(root, 'public', 'comparar', 'index.html');
-const syntaxCheckPath = path.join(root, '.build-check.js');
 const bundleScriptId = 'extractor-code';
 
 function rutaTerser() {
@@ -43,7 +44,7 @@ function minificarConTerser(fuentePath) {
             windowsHide: true,
         });
     } else {
-        salida = execSync(`pnpm exec terser "${archivo}" -c -m`, {
+        salida = execSync(`bunx terser "${archivo}" -c -m`, {
             encoding: 'utf8',
             cwd: root,
             stdio: ['ignore', 'pipe', 'pipe'],
@@ -55,17 +56,11 @@ function minificarConTerser(fuentePath) {
 }
 
 function validarSintaxis(codigo) {
-    fs.writeFileSync(syntaxCheckPath, codigo, 'utf8');
     try {
-        execSync(`node --check "${syntaxCheckPath}"`, {
-            cwd: root,
-            stdio: 'pipe',
-            windowsHide: true,
-        });
-    } finally {
-        if (fs.existsSync(syntaxCheckPath)) {
-            fs.unlinkSync(syntaxCheckPath);
-        }
+        // Validación de parseo sin depender de Node.
+        new Function(codigo);
+    } catch (error) {
+        throw new Error('Sintaxis invalida: ' + (error.message || error));
     }
 }
 
@@ -151,9 +146,9 @@ function resolverMinificadoExtraer() {
 
     console.error(
         'No hay fuente ni bundle para extraer.\n' +
-            '  pnpm install\n' +
-            '  pnpm run build\n' +
-            'o: node scripts/build.js otros/seguidores-seguidos-scraper_completo.js'
+            '  bun install\n' +
+            '  bun run build\n' +
+            'o: bun scripts/build.js otros/seguidores-seguidos-scraper_completo.js'
     );
     process.exit(1);
 }
@@ -175,7 +170,7 @@ function resolverMinificadoComparar() {
 
     console.error(
         'No hay otros/comparar-minified.js ni bundle en public/comparar/index.html.\n' +
-            '  Coloca el minificado en otros/comparar-minified.js y ejecuta pnpm run build'
+            '  Coloca el minificado en otros/comparar-minified.js y ejecuta bun run build'
     );
     process.exit(1);
 }
@@ -197,7 +192,7 @@ function main() {
         minificadoComparar = resolverMinificadoComparar();
     } catch (error) {
         console.error('Error al preparar bundles:', error.message || error);
-        console.error('Ejecuta: pnpm install   (instala terser local)');
+        console.error('Ejecuta: bun install   (instala terser local)');
         process.exit(1);
     }
 

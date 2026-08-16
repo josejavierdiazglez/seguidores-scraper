@@ -75,11 +75,22 @@
     }
 
     .logo-text__main {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.4em;
       font-size: clamp(1.875rem, 5.5vw, 2.625rem);
       font-weight: 800;
       letter-spacing: -0.035em;
       line-height: 1.15;
       color: var(--text);
+      white-space: nowrap;
+    }
+
+    .logo-text__version {
+      font-size: 0.42em;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-muted);
     }
 
     .logo-text__sub {
@@ -544,6 +555,80 @@
       color: var(--text-subtle);
     }
 
+    .results-copy {
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .results-copy.is-visible {
+      display: flex;
+    }
+
+    .results-copy__top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .results-copy__label {
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-subtle);
+    }
+
+    .results-copy__btn {
+      flex-shrink: 0;
+      padding: 0.45rem 0.85rem;
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      background: var(--surface-raised);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .results-copy__btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .results-copy__btn.is-copied {
+      border-color: var(--success);
+      color: var(--success);
+    }
+
+    .results-copy__text {
+      width: 100%;
+      min-height: 12rem;
+      max-height: 22rem;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0.875rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-inset);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      resize: vertical;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    .results-copy__text:focus {
+      outline: 2px solid var(--accent-soft);
+      outline-offset: 1px;
+    }
+
     .result-card {
       border-radius: var(--radius);
       background: var(--surface);
@@ -710,7 +795,7 @@
   <div class="container">
     <header>
       <div class="logo-text">
-        <span class="logo-text__main">Seguidores Scraper</span>
+        <span class="logo-text__main">Seguidores Scraper<span class="logo-text__version"></span></span>
         <span class="logo-text__sub">Analizador Seguidores - Seguidos</span>
       </div>
     </header>
@@ -902,6 +987,14 @@
           <p class="result-card__empty" data-empty hidden>Sin diferencias.</p>
         </article>
         </div>
+
+        <div class="results-copy" id="results-copy">
+          <div class="results-copy__top">
+            <p class="results-copy__label">Texto para copiar</p>
+            <button class="results-copy__btn" id="copy-results-btn" type="button">Copiar</button>
+          </div>
+          <textarea class="results-copy__text" id="results-copy-text" readonly spellcheck="false" aria-label="Resultado en texto plano"></textarea>
+        </div>
       </div>
     </div>
   </div>
@@ -955,6 +1048,64 @@
       return listaOrigen.unicos.filter(function (nombre) {
         return !setDestino.has(nombre);
       });
+    }
+
+    function formatearDiferencia(cantidad) {
+      return cantidad > 0 ? '(-' + cantidad + ')' : '(0)';
+    }
+
+    function formatearResumenDiferencia(totalBase, totalComparacion, cantidadDiferencia) {
+      if (cantidadDiferencia === 0) {
+        return 'Sin Diferencias. ' + totalBase + ' = ' + totalComparacion + ': (0)';
+      }
+
+      if (totalBase > totalComparacion) {
+        return 'Baja de ' + totalBase + ' a ' + totalComparacion + ': ' + formatearDiferencia(cantidadDiferencia);
+      }
+
+      if (totalBase < totalComparacion) {
+        return 'Sube de ' + totalBase + ' a ' + totalComparacion + ': ' + formatearDiferencia(cantidadDiferencia);
+      }
+
+      return totalBase + ' = ' + totalComparacion + ': ' + formatearDiferencia(cantidadDiferencia);
+    }
+
+    function formatearListaNumerada(lista) {
+      return lista.map(function (nombre, indice) {
+        return (indice + 1) + '. ' + nombre;
+      }).join('\n');
+    }
+
+    function formatearBloqueResultado(tipo, listaBase, listaComparacion, diferencias) {
+      var lineas = [
+        '=== Resultado ' + tipo + ' ===',
+        'Base: ' + listaBase.total,
+        'Comparacion: ' + listaComparacion.total,
+        formatearResumenDiferencia(listaBase.total, listaComparacion.total, diferencias.length),
+      ];
+
+      if (diferencias.length) {
+        lineas.push(formatearListaNumerada(diferencias));
+      }
+
+      return lineas.join('\n');
+    }
+
+    function actualizarTextoCopiable(bloques) {
+      var wrap = document.getElementById('results-copy');
+      var textarea = document.getElementById('results-copy-text');
+      var btn = document.getElementById('copy-results-btn');
+
+      if (!bloques.length) {
+        wrap.classList.remove('is-visible');
+        textarea.value = '';
+        return;
+      }
+
+      textarea.value = bloques.join('\n\n');
+      wrap.classList.add('is-visible');
+      btn.textContent = 'Copiar';
+      btn.classList.remove('is-copied');
     }
 
     function contarArchivos() {
@@ -1168,6 +1319,7 @@
       }
 
       var analizados = 0;
+      var bloquesTexto = [];
 
       Object.keys(GRUPOS).forEach(function (tipo) {
         var card = document.getElementById('result-' + tipo);
@@ -1184,13 +1336,17 @@
 
         renderResultado(tipo, listaBase, listaComparacion, diff);
         card.classList.remove('is-hidden');
+        bloquesTexto.push(formatearBloqueResultado(tipo, listaBase, listaComparacion, diff));
         analizados++;
       });
 
       if (analizados > 0) {
         document.getElementById('results-grid').classList.toggle('results__grid--single', analizados === 1);
         document.getElementById('results').classList.add('is-visible');
+        actualizarTextoCopiable(bloquesTexto);
         document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        actualizarTextoCopiable([]);
       }
 
       mostrarEstado('');
@@ -1198,6 +1354,38 @@
 
     document.querySelectorAll('.drop-zone').forEach(configurarZona);
     document.getElementById('analyze-btn').addEventListener('click', analizar);
+    document.getElementById('copy-results-btn').addEventListener('click', function () {
+      var textarea = document.getElementById('results-copy-text');
+      var btn = document.getElementById('copy-results-btn');
+      var texto = textarea.value;
+
+      if (!texto) {
+        return;
+      }
+
+      function marcarCopiado() {
+        btn.textContent = 'Copiado';
+        btn.classList.add('is-copied');
+        window.setTimeout(function () {
+          btn.textContent = 'Copiar';
+          btn.classList.remove('is-copied');
+        }, 1600);
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(marcarCopiado).catch(function () {
+          textarea.focus();
+          textarea.select();
+          document.execCommand('copy');
+          marcarCopiado();
+        });
+      } else {
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        marcarCopiado();
+      }
+    });
     actualizarProgreso();
 
     (function () {
@@ -1208,5 +1396,6 @@
       }
     })();
   </script>
+  <script src="../assets/version-badge.js"></script>
 </body>
 </html>

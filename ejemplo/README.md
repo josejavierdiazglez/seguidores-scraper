@@ -1,6 +1,6 @@
 # Carpeta de ejemplo
 
-Muestra cómo nombrar y organizar los `.txt` antes de usar el **analizador** o `pnpm run comparador`.
+Muestra cómo nombrar y organizar los `.txt` antes de usar el **analizador** o `bun run comparador`.
 
 ## Estructura
 
@@ -39,4 +39,4 @@ El comparador mira el **inicio del nombre** (`startsWith`): primero `seguidores`
 ## Uso
 
 - **Analizador (web):** sube los `.txt` y elige base y comparación.
-- **Terminal:** `pnpm run comparador` lee los archivos de `scraper/<cuenta>/`.
+- **Terminal:** `bun run comparador` lee los archivos de `scraper/<cuenta>/`.

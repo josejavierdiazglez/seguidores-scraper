@@ -1,6 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 'use strict';
+
+require('./enforce-bun');
 
 const fs = require('fs/promises');
 const path = require('path');

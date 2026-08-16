@@ -68,13 +68,22 @@
     }
 
     .logo-text__main {
-      display: block;
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.4em;
       font-size: clamp(1.875rem, 5.5vw, 2.625rem);
       font-weight: 800;
       letter-spacing: -0.035em;
       line-height: 1.15;
       color: var(--text);
       white-space: nowrap;
+    }
+
+    .logo-text__version {
+      font-size: 0.42em;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-muted);
     }
 
     .logo-text__sub {
@@ -332,7 +341,7 @@
   <div class="container">
     <header>
       <div class="logo-text">
-        <span class="logo-text__main">Seguidores Scraper</span>
+        <span class="logo-text__main">Seguidores Scraper<span class="logo-text__version"></span></span>
         <span class="logo-text__sub">Extraer Seguidores - Seguidos</span>
       </div>
     </header>
@@ -414,7 +423,7 @@
       if (!instagramScript) {
         const codeEl = document.getElementById('code');
         if (codeEl) {
-          codeEl.textContent = 'Falta el bundle. Ejecuta: pnpm run build';
+          codeEl.textContent = 'Falta el bundle. Ejecuta: bun run build';
         }
         return;
       }
@@ -462,5 +471,6 @@
       }
     })();
   </script>
+  <script src="../assets/version-badge.js"></script>
 </body>
 </html>

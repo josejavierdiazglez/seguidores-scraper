@@ -60,7 +60,7 @@ En <a href="https://josejavierdiazglez.github.io/seguidores-scraper/analizador/"
   <img src="images/04-analizador-comparacion-1.png" alt="Analizador: comparacion de seguidores y seguidos" width="747">
 </p>
 
-Alternativa en terminal: [`pnpm run comparador`](#comparador-en-terminal).
+Alternativa en terminal: [`bun run comparador`](#comparador-en-terminal).
 
 ---
 
@@ -76,15 +76,15 @@ Alternativa en terminal: [`pnpm run comparador`](#comparador-en-terminal).
 ### Requisitos
 
 - Navegador con Instagram (sesión iniciada) para los scripts de consola
-- <a href="https://nodejs.org/" target="_blank" rel="noopener noreferrer">Node.js</a> + <a href="https://pnpm.io/" target="_blank" rel="noopener noreferrer">pnpm</a> solo para `pnpm run comparador`
+- <a href="https://bun.sh/" target="_blank" rel="noopener noreferrer">Bun</a> solo para `bun run comparador` (npm/pnpm no están soportados)
 
 ### Instalación
 
 ```bash
 git clone git@github.com:josejavierdiazglez/seguidores-scraper.git
 cd seguidores-scraper
-pnpm install
-pnpm test
+bun install
+bun test
 ```
 
 ### Carpeta `scraper/` (tus `.txt`)
@@ -111,7 +111,7 @@ Ejemplo listo para probar en [`ejemplo/`](ejemplo/).
 ### Comparador en terminal
 
 ```bash
-pnpm run comparador
+bun run comparador
 ```
 
 Elige carpeta, archivo **base** y **comparación** para seguidores y seguidos.
@@ -122,14 +122,18 @@ Elige carpeta, archivo **base** y **comparación** para seguidores y seguidos.
 
 ### Abrir las páginas en local
 
-Abre los HTML de `public/` en el navegador (no hace falta servidor):
+```bash
+bun start
+```
 
-| Página | Archivo |
-|--------|---------|
-| Menú | `public/index.html` |
-| Extraer | `public/extraer/index.html` |
-| Comparar | `public/comparar/index.html` |
-| Analizador | `public/analizador/index.html` |
+Sirve `public/` en [http://localhost:4173/](http://localhost:4173/) y abre el hub en el navegador. También vale `bun run dev`.
+
+| Página | URL local |
+|--------|-----------|
+| Menú | http://localhost:4173/ |
+| Extraer | http://localhost:4173/extraer/ |
+| Comparar | http://localhost:4173/comparar/ |
+| Analizador | http://localhost:4173/analizador/ |
 
 En GitHub Pages: <a href="https://josejavierdiazglez.github.io/seguidores-scraper/" target="_blank" rel="noopener noreferrer">josejavierdiazglez.github.io/seguidores-scraper/</a>
 
@@ -145,8 +149,8 @@ seguidores-scraper/
 ├── ejemplo/             # .txt de muestra
 ├── images/              # Capturas del README
 ├── scraper/             # Tus .txt (local, gitignore)
-├── package.json         # pnpm test, pnpm run comparador
-└── pnpm-lock.yaml
+├── package.json         # bun start, bun test, bun run comparador
+└── bun.lock
 ```
 
 </details>

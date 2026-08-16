@@ -1,15 +1,18 @@
 {
   "name": "seguidores-scraper",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "private": true,
-  "packageManager": "pnpm@9.15.9",
+  "packageManager": "bun@1.3.14",
   "engines": {
-    "node": ">=20"
+    "bun": ">=1.1"
   },
   "scripts": {
-    "build": "node scripts/build.js",
-    "comparador": "node scripts/comparador-txt.js",
-    "test": "node --test scripts/comparador-txt.test.js"
+    "preinstall": "bun scripts/enforce-bun.js",
+    "start": "bun scripts/dev-server.js",
+    "dev": "bun scripts/dev-server.js",
+    "build": "bun scripts/build.js",
+    "comparador": "bun scripts/comparador-txt.js",
+    "test": "bun scripts/enforce-bun.js && bun test scripts/comparador-txt.test.js"
   },
   "devDependencies": {
     "terser": "^5.39.0"

@@ -31,7 +31,7 @@ jobs:
               exit 1
             fi
             if ! grep -q 'type="application/json">"' "$page"; then
-              echo "$page no tiene el bundle. En local ejecuta: pnpm run build"
+              echo "$page no tiene el bundle. En local ejecuta: bun run build"
               exit 1
             fi
           done
