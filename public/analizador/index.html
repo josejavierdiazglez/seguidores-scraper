@@ -557,12 +557,32 @@
 
     .results-copy {
       display: none;
-      flex-direction: column;
-      gap: 0.75rem;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
       margin-top: 0.25rem;
+      align-items: start;
     }
 
     .results-copy.is-visible {
+      display: grid;
+    }
+
+    .results-copy--single {
+      grid-template-columns: 1fr;
+    }
+
+    .results-copy__block {
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem 1.125rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-strong);
+      background: var(--surface);
+      min-width: 0;
+    }
+
+    .results-copy__block.is-visible {
       display: flex;
     }
 
@@ -607,8 +627,8 @@
 
     .results-copy__text {
       width: 100%;
-      min-height: 12rem;
-      max-height: 22rem;
+      min-height: 10rem;
+      max-height: 18rem;
       box-sizing: border-box;
       margin: 0;
       padding: 0.875rem 1rem;
@@ -772,7 +792,8 @@
 
     @media (max-width: 768px) {
       .compare-grid,
-      .results__grid {
+      .results__grid,
+      .results-copy {
         grid-template-columns: 1fr;
       }
 
@@ -989,11 +1010,20 @@
         </div>
 
         <div class="results-copy" id="results-copy">
-          <div class="results-copy__top">
-            <p class="results-copy__label">Texto para copiar</p>
-            <button class="results-copy__btn" id="copy-results-btn" type="button">Copiar</button>
+          <div class="results-copy__block" id="results-copy-seguidores" data-copy-tipo="seguidores">
+            <div class="results-copy__top">
+              <p class="results-copy__label">Texto seguidores</p>
+              <button class="results-copy__btn" type="button" data-copy-btn>Copiar</button>
+            </div>
+            <textarea class="results-copy__text" data-copy-text readonly spellcheck="false" aria-label="Resultado seguidores en texto plano"></textarea>
           </div>
-          <textarea class="results-copy__text" id="results-copy-text" readonly spellcheck="false" aria-label="Resultado en texto plano"></textarea>
+          <div class="results-copy__block" id="results-copy-seguidos" data-copy-tipo="seguidos">
+            <div class="results-copy__top">
+              <p class="results-copy__label">Texto seguidos</p>
+              <button class="results-copy__btn" type="button" data-copy-btn>Copiar</button>
+            </div>
+            <textarea class="results-copy__text" data-copy-text readonly spellcheck="false" aria-label="Resultado seguidos en texto plano"></textarea>
+          </div>
         </div>
       </div>
     </div>
@@ -1091,21 +1121,65 @@
       return lineas.join('\n');
     }
 
-    function actualizarTextoCopiable(bloques) {
+    function actualizarTextoCopiable(textosPorTipo) {
       var wrap = document.getElementById('results-copy');
-      var textarea = document.getElementById('results-copy-text');
-      var btn = document.getElementById('copy-results-btn');
+      var visibles = 0;
 
-      if (!bloques.length) {
-        wrap.classList.remove('is-visible');
-        textarea.value = '';
+      Object.keys(GRUPOS).forEach(function (tipo) {
+        var block = document.getElementById('results-copy-' + tipo);
+        var textarea = block.querySelector('[data-copy-text]');
+        var btn = block.querySelector('[data-copy-btn]');
+        var texto = textosPorTipo[tipo];
+
+        if (texto) {
+          textarea.value = texto;
+          block.classList.add('is-visible');
+          btn.textContent = 'Copiar';
+          btn.classList.remove('is-copied');
+          visibles++;
+        } else {
+          textarea.value = '';
+          block.classList.remove('is-visible');
+          btn.textContent = 'Copiar';
+          btn.classList.remove('is-copied');
+        }
+      });
+
+      wrap.classList.toggle('is-visible', visibles > 0);
+      wrap.classList.toggle('results-copy--single', visibles === 1);
+    }
+
+    function copiarTextoDesdeBloque(block) {
+      var textarea = block.querySelector('[data-copy-text]');
+      var btn = block.querySelector('[data-copy-btn]');
+      var texto = textarea.value;
+
+      if (!texto) {
         return;
       }
 
-      textarea.value = bloques.join('\n\n');
-      wrap.classList.add('is-visible');
-      btn.textContent = 'Copiar';
-      btn.classList.remove('is-copied');
+      function marcarCopiado() {
+        btn.textContent = 'Copiado';
+        btn.classList.add('is-copied');
+        window.setTimeout(function () {
+          btn.textContent = 'Copiar';
+          btn.classList.remove('is-copied');
+        }, 1600);
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto).then(marcarCopiado).catch(function () {
+          textarea.focus();
+          textarea.select();
+          document.execCommand('copy');
+          marcarCopiado();
+        });
+      } else {
+        textarea.focus();
+        textarea.select();
+        document.execCommand('copy');
+        marcarCopiado();
+      }
     }
 
     function contarArchivos() {
@@ -1319,13 +1393,17 @@
       }
 
       var analizados = 0;
-      var bloquesTexto = [];
+      var textosPorTipo = {
+        seguidores: null,
+        seguidos: null,
+      };
 
       Object.keys(GRUPOS).forEach(function (tipo) {
         var card = document.getElementById('result-' + tipo);
 
         if (!estadoGrupo(tipo).completo) {
           card.classList.add('is-hidden');
+          textosPorTipo[tipo] = null;
           return;
         }
 
@@ -1336,17 +1414,17 @@
 
         renderResultado(tipo, listaBase, listaComparacion, diff);
         card.classList.remove('is-hidden');
-        bloquesTexto.push(formatearBloqueResultado(tipo, listaBase, listaComparacion, diff));
+        textosPorTipo[tipo] = formatearBloqueResultado(tipo, listaBase, listaComparacion, diff);
         analizados++;
       });
 
       if (analizados > 0) {
         document.getElementById('results-grid').classList.toggle('results__grid--single', analizados === 1);
         document.getElementById('results').classList.add('is-visible');
-        actualizarTextoCopiable(bloquesTexto);
-        document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        actualizarTextoCopiable(textosPorTipo);
+        document.getElementById('results-copy').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       } else {
-        actualizarTextoCopiable([]);
+        actualizarTextoCopiable({ seguidores: null, seguidos: null });
       }
 
       mostrarEstado('');
@@ -1354,37 +1432,10 @@
 
     document.querySelectorAll('.drop-zone').forEach(configurarZona);
     document.getElementById('analyze-btn').addEventListener('click', analizar);
-    document.getElementById('copy-results-btn').addEventListener('click', function () {
-      var textarea = document.getElementById('results-copy-text');
-      var btn = document.getElementById('copy-results-btn');
-      var texto = textarea.value;
-
-      if (!texto) {
-        return;
-      }
-
-      function marcarCopiado() {
-        btn.textContent = 'Copiado';
-        btn.classList.add('is-copied');
-        window.setTimeout(function () {
-          btn.textContent = 'Copiar';
-          btn.classList.remove('is-copied');
-        }, 1600);
-      }
-
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(texto).then(marcarCopiado).catch(function () {
-          textarea.focus();
-          textarea.select();
-          document.execCommand('copy');
-          marcarCopiado();
-        });
-      } else {
-        textarea.focus();
-        textarea.select();
-        document.execCommand('copy');
-        marcarCopiado();
-      }
+    document.querySelectorAll('[data-copy-btn]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        copiarTextoDesdeBloque(btn.closest('.results-copy__block'));
+      });
     });
     actualizarProgreso();
 
